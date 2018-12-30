@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <head><meta charset="UTF-8"></head> 
+    <link rel="stylesheet" type="text/css" href="options.css">
+  </head>
+  <body>
+    <div class="content">
+      <table class="header"><tr><td class="item">General Settings</td><td id="reload" title="reload"></td></tr></table>
+      <table class="options">
+        <tr><td class="title">No popup and add new iframes to blocklist automaticly</td><td class="checkbox"><input type="checkbox" id="nopopupAutomaticAdd"></input></td></tr>
+        <tr><td class="title">No popup and do not addd new iframes to blocklist</td><td class="checkbox"><input type="checkbox" id="nopopupDonotAdd"></input></td></tr>
+      </table>
+      <table class="header"><tr><td class="item">Add iframe manually to block list</td></tr></table>
+      <table><tr><td><input id="domainBlockInput" type="text" placeholder="i.e. www.google.com"></input></td><td id="addDomainBlock" title="Add Domain to blocklist"></td></tr></table>
+      <table class="header"><tr><td class="item">List of blocked iframes</td></tr></table>
+      <table>
+        <thead>
+          <tr>
+            <td type="number"><i>#</i></td>
+            <td type="which_webpage">Domain</td>
+            <td type="iframe_address">Blocked iframe</td>
+            <td type="closeButton" title="Remove this item"></td>
+          </tr>
+        </thead>
+        <tbody id="blocklist"></tbody>
+      </table>
+	  
+	  <table class="header"><tr><td class="item">Add domains manually to white list</td></tr></table>
+      <table><tr><td><input id="domainWhiteInput" type="text" placeholder="i.e. www.google.com"></input></td><td id="addDomainWhite" title="Add Domain to whitelist"></td></tr></table>
+      <table class="header"><tr><td class="item">List of allowed domains</td></tr></table>
+      
+	  <table>
+        <thead>
+          <tr>
+            <td type="number"><i>#</i></td>
+            <td type="which_webpage">Domain</td>
+            <td type="iframe_address">Address</td>
+            <td type="closeButton" title="Remove this item"></td>
+          </tr>
+        </thead>
+        <tbody id="whitelist"></tbody>
+      </table> 
+	  
+    </div>
+    <script src="options.js"></script>
+  </body>
+</html>
