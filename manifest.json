@@ -15,10 +15,14 @@
   }, 
   "manifest_version": 2, 
   "name": "iframe Blocker", 
+  
+  /*This no longer works
   "options_ui": {
     "chrome_style": true, 
     "page": "data/options/options.html"
-  }, 
+  }, */
+  
+  "options_page": "data/options/options.html",
   "permissions": [
 	"storage",
     "<all_urls>", 

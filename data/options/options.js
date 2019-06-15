@@ -12,10 +12,113 @@ var checkboxBlockAll = "nopopupAutomaticAdd";
 var checkboxIgnoreAll = "nopopupDonotAdd";
 
 //Creates object which contains page and iframes that will be blocked
-function DomainiFrameList( ) {
-    this.webpage = "";
-    this.iframeList = [];
+/**Adds element to the set or map depending on number of arguments in function**/
+function addElement(element,webpage){
+	with(this){
+    	if(typeof webpage === "undefined"){
+        	iframeSet.add(element);
+			//chrome.storage.local.set({[blocklistName]: lists[blocklistName] }, function () {});
+		}
+        else{
+            domainiframeMap.set(webpage,element);
+			//chrome.storage.local.set({[blocklistName]: lists[blocklistName] }, function () {});
+		}
+    }
 }
+
+// Create an object:
+function DomainiFrameList() {
+    this.domainiframeMap = new Map();
+    this.iframeSet = new Set();
+	this.addFunction = addElement;
+	this.fillFunction;
+}
+
+var blocklistName = "blocklist";
+var whitelistName = "whitelist";
+var blocklist = new DomainiFrameList();
+var whitelist = new DomainiFrameList();
+
+var lists_future = { [blocklistName] : blocklist, [whitelistName]: whitelist };
+
+//Functions adding webpages to specific listStyleType
+var add_to_block_future = function(element,webpage){
+	lists_future[blocklistName].addFunction(element,webpage);
+	chrome.storage.local.set({[blocklistName]: lists_future[blocklistName] } );
+};
+
+var add_to_white_future = function(element,webpage){
+	lists_future[blocklistName].addFunction(element,webpage);
+	chrome.storage.local.set( {[whitelistName]: lists_future[whitelistName]} );
+}; 
+
+var addDomain_future = function (input, addFunction ) {
+	var domain = document.getElementById(input).value;
+	var webpage ;
+	//First it needs to split 
+	domain = domain.split(" ");
+	domain.forEach(function(domain) {
+	if (domain) {
+		domain = domain.replace("https://", '').replace("http://", '').replace("ftp://", '');
+		var pageUrl = "https://" + domain;
+		var hostname = new URL(pageUrl).hostname;
+		//This function adds to correct list
+		
+		//To poprawic bo nw z ktorej storny zaczac dodawac
+		hostname = hostname.split(":");
+		var webPage;
+		if(hostname.length ===2){
+				webPage = hostname[0];
+				hostname = hostname[1];
+		}
+		//else //Probably redundant
+		//	hostname = hostname[0];
+			
+		addFunction(hostname, webPage);
+	}
+  });
+
+};
+
+
+/**Function which is called when user accepts new input**/
+var addDomainBlock_future = function () {
+	addDomain(inputField, add_to_block_future);
+};
+
+/**Function which is called when user accepts new input**/
+var addDomainWhite_future = function () {
+	addDomain(inputFieldWhite, add_to_white_future);
+};
+
+
+//Separation will be done by applying ; character
+
+//Logika do dodawania function addNewiFrameForSite(addSite, addiFrame)
+/* //Zrobic set do globalnych? 
+var domainMap;
+var domainSet;
+
+function addNewiFrameForSite(addSite, addiFrame){
+	if(domainMap.has(page))
+	{
+		domainMap.get(page).forEach(function(frame)
+		{
+			if(frame === addiFrame) return;
+		});
+		
+		domainMap.set(addSite,addiFrame);
+	}
+	else
+	{
+		domainMap.set(addSite,addiFrame);
+	}	
+}
+
+function addNewiFrameForAllSites(addiFrame){
+	//just add xd sets unique
+}
+*/
 
 /*
 2 lists:
@@ -40,19 +143,18 @@ chrome.storage.onChanged.addListener(function (e) {
 	else if (whitelistName in e) fill_white(); });
 
 var add_to_block = function(element){
-	//_blocklist[element] = element;
 	lists[blocklistName][element] = element;
 	chrome.storage.local.set({[blocklistName]: lists[blocklistName] }, function () {});
 };
 
 var add_to_white = function(element){
-	//_whitelist[element] = element;
 	lists[whitelistName][element] = element;
 	chrome.storage.local.set( {[whitelistName]: lists[whitelistName]} );
 }; 
 
 var addDomain = function (input, addFunction ) {
   var domain = document.getElementById(input).value;
+  var webpage ;
   domain = domain.split(" ");
   domain.forEach(adding);
   function adding(domain){
@@ -66,14 +168,20 @@ var addDomain = function (input, addFunction ) {
   }
 };
 
+/**Function which is called when user accepts new input**/
 var addDomainBlock = function () {
 	addDomain(inputField, add_to_block);
 };
 
+/**Function which is called when user accepts new input**/
 var addDomainWhite = function () {
 	addDomain(inputFieldWhite, add_to_white);
 };
 
+/**Function which fill the list
+	it will be called whenever something is added to lsit
+	@param listName - name of a list from which it will show elements
+	@param input - name of the input field from which value was entered**/
 var fill = function (listName, input) {
 	
 	chrome.storage.local.get(null, function (storage) {
@@ -116,23 +224,70 @@ var fill = function (listName, input) {
   });
 };
 
+/**Function which fill the list
+	it will be called whenever something is added to lsit
+	@param listName - name of a list from which it will show elements
+	@param input - name of the input field from which value was entered**/
+var fill_futureMAYBE = function (listName, input) {
+	
+	chrome.storage.local.get(null, function (storage) {
+		var count = 1;
+		document.getElementById(input).focus();
+		document.getElementById(input).value = '';
+		var tbody = document.getElementById(listName);
+		lists[listName] = (listName in storage) ? storage[listName] : {};
+		tbody.textContent = '';
+		/*  */
+		for (var domain in lists[listName]) {
+		  var item = document.createElement('tr');
+		  var close = document.createElement('td');
+		  var number = document.createElement('td');
+		  var webpage = document.createElement('td');
+		  var blocked = document.createElement('td');
+		  /*  */
+		  close.setAttribute('type', 'close');
+		  number.setAttribute('type', 'number');
+		  blocked.setAttribute('type', pageAddress);
+		  webpage.setAttribute('type', pageAddress);
+		  /*  */
+		  number.textContent = count;
+		  blocked.textContent = "*://" + domain + "/*";
+		  /*  */
+		  close.setAttribute(pageAddress, domain);
+		  close.addEventListener("click", function (e) {
+			var _blocked = e.target.getAttribute(pageAddress);
+			delete lists[listName][_blocked];
+			saveOptions({[listName]: lists[listName]});
+		  });
+		  /*  */
+		  item.appendChild(number);
+		  item.appendChild(webpage);
+		  item.appendChild(blocked);
+		  item.appendChild(close);
+		  tbody.appendChild(item);
+		  count++;
+		}
+	});
+};
+
 //Fills values in the options html for block list
 var fill_blocked = function () {
 	fill( blocklistName, inputField );
-	//_blocked = lists[blocklistName];
 };
 
 //Fills values in the options html for white list
+/**Fills white list**/
 var fill_white = function () {
 	fill( whitelistName, inputFieldWhite);
-	//_whitelist = lists[whitelistName];
 };
 
+/**Fills both lists**/
 var fill_both = function () {
 	fill_white();
 	fill_blocked();
 };
 
+/**Sets everything and adds listeners etc**/
 var load = function () {
   fill_both();
   document.getElementById(blockpage_address_accept_function).addEventListener("click", addDomainBlock);
@@ -157,43 +312,3 @@ var load = function () {
 window.addEventListener('load', load, false);
 
 
-//KOSZ:
-//
-//
-//var fill_old = function () {
-//  chrome.storage.local.get(null, function (storage) {
-//    var count = 1;
-//    document.getElementById(inputField).focus();
-//    document.getElementById(inputField).value = '';
-//    var tbody = document.getElementById(blocklistName);
-//    _blocklist = (blocklistName in storage) ? storage[blocklistName] : {};
-//    tbody.textContent = '';
-//    /*  */
-//    for (var domain in _blocklist) {
-//      var item = document.createElement('tr');
-//      var close = document.createElement('td');
-//      var number = document.createElement('td');
-//      var blocked = document.createElement('td');
-//      /*  */
-//      close.setAttribute('type', 'close');
-//      number.setAttribute('type', 'number');
-//      blocked.setAttribute('type', blockedPageAddress);
-//      /*  */
-//      number.textContent = count;
-//      blocked.textContent = "*://" + domain + "/*";
-//      /*  */
-//      close.setAttribute(blockedPageAddress, domain);
-//      close.addEventListener("click", function (e) {
-//        var _blocked = e.target.getAttribute(blockedPageAddress);
-//        delete _blocklist[_blocked];
-//        saveOptions({[blocklistName]: _blocklist});
-//      });
-//      /*  */
-//      item.appendChild(number);
-//      item.appendChild(blocked);
-//      item.appendChild(close);
-//      tbody.appendChild(item);
-//      count++;
-//    }
-//  });
-//};

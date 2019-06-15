@@ -10,20 +10,25 @@ var filter = {"urls": urls, "types": ["sub_frame"]};
 
 var table_blocklist_name = "blocklist";
 var table_whitelist_name = "whitelist";
-//This function is being called each time webpage is loaded
 
+//This function is being called each time webpage is loaded
 var beforeSendHeader = function (info) {
 	
-	var _url = info.url
-	var _hostname = new URL(_url).hostname;
-    if (DEBUG>=7) alert(info.frameId + " url: " + _hostname);
+	var _mainFrame = info.initiator;
+	
+	var _url = info.url;
+	
+	var _mainFrameHostname = new URL(_mainFrame).hostname;
+	var _iFrameHostname = new URL(_url).hostname;
+	
+    if (DEBUG>=7) alert(info.frameId + " url: " + _iFrameHostname);
 	//Matchowac regexem
 	for (var site in _blocklistIFrames)
 	{
 		let re1 = new RegExp(".*"+_blocklistIFrames[site]+".*");
-		if (_hostname.match(re1))
+		if (_iFrameHostname.match(re1))
 		{
-			if(DEBUG>=4) alert("This iFrame: "+_hostname+" will be blocked!");
+			if(DEBUG>=4) alert("This iFrame: "+_iFrameHostname+" will be blocked!");
 			if(DEBUG>=3)
 			{
 				var stringlist = [];
@@ -42,21 +47,21 @@ var beforeSendHeader = function (info) {
 	for (var site in _whitelistIFrames)
 	{
 		let re1 = new RegExp(".*"+_whitelistIFrames[site]+".*");
-		if (_hostname.match(re1))
+		if (_iFrameHostname.match(re1))
 		{
-			if(DEBUG>=6) alert("This iFrame: "+_hostname+" will be shown!");
+			if(DEBUG>=6) alert("This iFrame: "+_iFrameHostname+" will be shown!");
 			return;
 		}
 	}
-	_hostname = _hostname.replace(/www./i,"");
+	_iFrameHostname = _iFrameHostname.replace(/www./i,"");
 	
 	//Its completely new: POPUP asking?
-	if(window.confirm("Add this iframe:\n" + _hostname +"\nto blocklist <OK> or whitelist <Cancel>?")){
-		_blocklistIFrames[_hostname] =_hostname;
+	if(window.confirm("Add this iframe:\n" + _iFrameHostname +"\nto blocklist <OK> or whitelist <Cancel>?")){
+		_blocklistIFrames[_iFrameHostname] =_iFrameHostname;
 		chrome.storage.local.set({[table_blocklist_name]: _blocklistIFrames}, function () { });
 		return {"cancel" : true};
 	} else {
-		_whitelistIFrames[_hostname] = _hostname;
+		_whitelistIFrames[_iFrameHostname] = _iFrameHostname;
 		chrome.storage.local.set({[table_whitelist_name]: _whitelistIFrames}, function () { });
 	}
 	
@@ -71,7 +76,6 @@ var beforeSendHeader = function (info) {
 };
 
 //TODO: Strona gdzie mozna dodawac ramki do blokowania
-
 chrome.webRequest.onBeforeSendHeaders.addListener(beforeSendHeader, filter, ["blocking"]);
 
 //TODO: Saving to the memory
@@ -97,7 +101,8 @@ var updateListener = function (callback) {
 		
 		//Removing all listeners and creating new one with global var filter
 		chrome.webRequest.onBeforeSendHeaders.removeListener(beforeSendHeader);
-		/*if (urls.length)*/ chrome.webRequest.onBeforeSendHeaders.addListener(beforeSendHeader, filter, ["blocking"]);
+		/*if (urls.length)*/ 
+		chrome.webRequest.onBeforeSendHeaders.addListener(beforeSendHeader, filter, ["blocking"]);
 		callback(true);
   });
 };
